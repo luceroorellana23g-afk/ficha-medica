@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Médica - Sistema de Ingreso</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); margin: auto; }
+        h2 { text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .buttons { text-align: center; margin-top: 20px; }
+        button { padding: 10px 20px; margin: 5px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-guardar { background-color: #27ae60; color: white; }
+        .btn-limpiar { background-color: #f39c12; color: white; }
+        .btn-buscar { background-color: #2980b9; color: white; }
+        .btn-cerrar { background-color: #c0392b; color: white; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Ficha Médica de Ingreso</h2>
+    <form id="fichaMedicaForm">
+        <div class="form-group"><label>Rut:</label><input type="text" id="rut" required></div>
+        <div class="form-group"><label>Nombres:</label><input type="text" id="nombres" required></div>
+        <div class="form-group"><label>Apellidos:</label><input type="text" id="apellidos" required></div>
+        <div class="form-group"><label>Dirección:</label><input type="text" id="direccion"></div>
+        <div class="form-group"><label>Ciudad:</label><input type="text" id="ciudad"></div>
+        <div class="form-group"><label>Teléfono:</label><input type="tel" id="telefono"></div>
+        <div class="form-group"><label>Email:</label><input type="email" id="email"></div>
+        <div class="form-group"><label>Fecha de Nacimiento:</label><input type="date" id="fechaNac"></div>
+        <div class="form-group"><label>Estado civil:</label>
+            <select id="estadoCivil">
+                <option value="">Seleccione...</option>
+                <option value="Soltero/a">Soltero/a</option>
+                <option value="Casado/a">Casado/a</option>
+                <option value="Divorciado/a">Divorciado/a</option>
+                <option value="Viudo/a">Viudo/a</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Comentarios:</label><textarea id="comentarios" rows="3"></textarea></div>
+
+        <div class="buttons">
+            <button type="button" class="btn-guardar" onclick="guardarRegistro()">Guardar</button>
+            <button type="button" class="btn-buscar" onclick="buscarPorApellido()">Buscar por Apellido</button>
+            <button type="button" class="btn-limpiar" onclick="limpiarFormulario()">Limpiar</button>
+            <button type="button" class="btn-cerrar" onclick="cerrarFormulario()">Cerrar</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function obtenerRegistros() {
+        return JSON.parse(localStorage.getItem('fichasMedicas') || '{}');
+    }
+
+    function guardarRegistro() {
+        let rut = document.getElementById('rut').value.trim();
+        let nombres = document.getElementById('nombres').value.trim();
+        let apellidos = document.getElementById('apellidos').value.trim();
+
+        if (!rut || !nombres || !apellidos) {
+            alert("Por favor, complete al menos los campos obligatorios (Rut, Nombres y Apellidos).");
+            return;
+        }
+
+        let registros = obtenerRegistros();
+
+        if (registros[rut]) {
+            let sobrescribir = confirm("El registro con este Rut ya existe. ¿Desea sobrescribir los datos?");
+            if (!sobrescribir) return;
+        }
+
+        registros[rut] = {
+            rut: rut,
+            nombres: nombres,
+            apellidos: apellidos,
+            direccion: document.getElementById('direccion').value,
+            ciudad: document.getElementById('ciudad').value,
+            telefono: document.getElementById('telefono').value,
+            email: document.getElementById('email').value,
+            fechaNac: document.getElementById('fechaNac').value,
+            estadoCivil: document.getElementById('estadoCivil').value,
+            comentarios: document.getElementById('comentarios').value
+        };
+
+        localStorage.setItem('fichasMedicas', JSON.stringify(registros));
+        alert("¡Registro guardado con éxito!");
+        limpiarFormulario();
+    }
+
+    function buscarPorApellido() {
+        let apellidoBusqueda = document.getElementById('apellidos').value.trim().toLowerCase();
+        if (!apellidoBusqueda) {
+            alert("Ingrese un apellido en el campo 'Apellidos' para realizar la búsqueda.");
+            return;
+        }
+
+        let registros = obtenerRegistros();
+        let encontrado = null;
+
+        for (let rut in registros) {
+            if (registros[rut].apellidos.toLowerCase().includes(apellidoBusqueda)) {
+                encontrado = registros[rut];
+                break;
+            }
+        }
+
+        if (encontrado) {
+            document.getElementById('rut').value = encontrado.rut;
+            document.getElementById('nombres').value = encontrado.nombres;
+            document.getElementById('apellidos').value = encontrado.apellidos;
+            document.getElementById('direccion').value = encontrado.direccion;
+            document.getElementById('ciudad').value = encontrado.ciudad;
+            document.getElementById('telefono').value = encontrado.telefono;
+            document.getElementById('email').value = encontrado.email;
+            document.getElementById('fechaNac').value = encontrado.fechaNac;
+            document.getElementById('estadoCivil').value = encontrado.estadoCivil;
+            document.getElementById('comentarios').value = encontrado.comentarios;
+            alert("¡Registro encontrado y cargado en pantalla!");
+        } else {
+            alert("No se encontró ningún registro con ese apellido.");
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('fichaMedicaForm').reset();
+    }
+
+    function cerrarFormulario() {
+        if (confirm("¿Desea cerrar / limpiar la sesión de la ficha?")) {
+            limpiarFormulario();
+        }
+    }
+</script>
+
+</body>
+</html>
